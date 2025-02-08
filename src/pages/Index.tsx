@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -62,6 +62,8 @@ const Index = () => {
       if (dbError) throw dbError;
 
       alert('Video uploaded successfully!');
+      // Fetch results after successful upload
+      await fetchResults();
     } catch (error: any) {
       console.error('Error uploading video:', error.message);
       alert('Error uploading video');
@@ -84,10 +86,10 @@ const Index = () => {
     }
   };
 
-  // Fetch results when component mounts
-  useState(() => {
+  // Use useEffect instead of useState for initial fetch
+  useEffect(() => {
     fetchResults();
-  });
+  }, []); // Empty dependency array means this runs once when component mounts
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -129,17 +131,17 @@ const Index = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {students.map((student) => (
-              <Card key={student.id}>
+              <Card key={student.st_id}>
                 <CardContent className="p-4">
                   {student.image && (
                     <img
                       src={student.image}
-                      alt={`Student ${student.id}`}
+                      alt={`Student ${student.st_id}`}
                       className="w-full h-48 object-cover mb-4 rounded-md"
                     />
                   )}
                   <div className="space-y-2">
-                    <p className="font-semibold">Student ID: {student.id}</p>
+                    <p className="font-semibold">Student ID: {student.st_id}</p>
                     <p>
                       Attention: {student.attention_percentage?.toFixed(2)}%
                     </p>
