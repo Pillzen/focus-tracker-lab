@@ -13,20 +13,20 @@ export type Database = {
         Row: {
           attention_percentage: number | null
           created_at: string
-          id: string
           image: string | null
+          st_id: string
         }
         Insert: {
           attention_percentage?: number | null
           created_at?: string
-          id: string
           image?: string | null
+          st_id: string
         }
         Update: {
           attention_percentage?: number | null
           created_at?: string
-          id?: string
           image?: string | null
+          st_id?: string
         }
         Relationships: []
       }

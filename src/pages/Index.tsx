@@ -15,7 +15,32 @@ const Index = () => {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      // Upload video to storage
+      // First, get the current video if any exists
+      const { data: existingVideos } = await supabase
+        .from('video_analysis')
+        .select('video_url')
+        .limit(1);
+
+      if (existingVideos && existingVideos.length > 0) {
+        // Extract filename from the URL
+        const oldVideoUrl = existingVideos[0].video_url;
+        const oldFileName = oldVideoUrl.split('/').pop();
+        
+        if (oldFileName) {
+          // Delete old video from storage
+          await supabase.storage
+            .from('videos')
+            .remove([oldFileName]);
+
+          // Delete old video entry from database
+          await supabase
+            .from('video_analysis')
+            .delete()
+            .match({ video_url: oldVideoUrl });
+        }
+      }
+
+      // Upload new video to storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const { data: storageData, error: storageError } = await supabase.storage
@@ -29,7 +54,7 @@ const Index = () => {
         .from('videos')
         .getPublicUrl(fileName);
 
-      // Create video analysis entry
+      // Create new video analysis entry
       const { error: dbError } = await supabase
         .from('video_analysis')
         .insert([{ video_url: publicURL.publicUrl }]);
