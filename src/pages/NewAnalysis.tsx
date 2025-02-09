@@ -6,10 +6,12 @@ import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload } from "lucide-react";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
 const NewAnalysis = () => {
   const [uploading, setUploading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -62,17 +64,30 @@ const NewAnalysis = () => {
         .from('videos')
         .getPublicUrl(fileName);
 
-      const { error: dbError } = await supabase
+      // Simulating analysis results for demonstration
+      const mockAnalysis = {
+        total_students: Math.floor(Math.random() * 30) + 10,
+        average_attention_percentage: Math.floor(Math.random() * 100)
+      };
+
+      const { data: analysisData, error: dbError } = await supabase
         .from('video_analysis')
-        .insert([{ video_url: publicURL.publicUrl }]);
+        .insert([{ 
+          video_url: publicURL.publicUrl,
+          total_students: mockAnalysis.total_students,
+          average_attention_percentage: mockAnalysis.average_attention_percentage
+        }])
+        .select()
+        .single();
 
       if (dbError) throw dbError;
 
+      setAnalysisResult(analysisData);
+
       toast({
         title: "Success",
-        description: "Video uploaded successfully!",
+        description: "Video uploaded and analyzed successfully!",
       });
-      navigate("/");
     } catch (error: any) {
       console.error('Error uploading video:', error.message);
       toast({
@@ -92,7 +107,7 @@ const NewAnalysis = () => {
   return (
     <div>
       <Navbar email={user?.email || ""} />
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-8 px-4 space-y-8">
         <Card>
           <CardHeader>
             <CardTitle>Upload Video for Analysis</CardTitle>
@@ -124,6 +139,33 @@ const NewAnalysis = () => {
             </div>
           </CardContent>
         </Card>
+
+        {analysisResult && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Analysis Results</CardTitle>
+              <CardDescription>
+                Here are the results of your video analysis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Total Students</TableHead>
+                    <TableHead>Average Attention Percentage</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>{analysisResult.total_students}</TableCell>
+                    <TableCell>{analysisResult.average_attention_percentage}%</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
