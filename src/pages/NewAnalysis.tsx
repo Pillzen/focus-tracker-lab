@@ -6,10 +6,12 @@ import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload } from "lucide-react";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
 const NewAnalysis = () => {
   const [uploading, setUploading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [recentAnalysis, setRecentAnalysis] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -20,6 +22,34 @@ const NewAnalysis = () => {
     };
     getUser();
   }, []);
+
+  // Fetch the most recent analysis whenever a new video is uploaded
+  const fetchRecentAnalysis = async () => {
+    try {
+      // First get the most recent video_analysis entry
+      const { data: videoData, error: videoError } = await supabase
+        .from('video_analysis')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (videoError) throw videoError;
+
+      if (videoData) {
+        // Then get all students associated with this video
+        const { data: studentsData, error: studentsError } = await supabase
+          .from('students')
+          .select('st_id, image, attention_percentage')
+          .order('created_at', { ascending: false });
+
+        if (studentsError) throw studentsError;
+        setRecentAnalysis(studentsData || []);
+      }
+    } catch (error: any) {
+      console.error('Error fetching recent analysis:', error);
+    }
+  };
 
   const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -72,7 +102,9 @@ const NewAnalysis = () => {
         title: "Success",
         description: "Video uploaded successfully!",
       });
-      navigate("/");
+
+      // Fetch the latest analysis after successful upload
+      await fetchRecentAnalysis();
     } catch (error: any) {
       console.error('Error uploading video:', error.message);
       toast({
@@ -92,7 +124,7 @@ const NewAnalysis = () => {
   return (
     <div>
       <Navbar email={user?.email || ""} />
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-8 px-4 space-y-8">
         <Card>
           <CardHeader>
             <CardTitle>Upload Video for Analysis</CardTitle>
@@ -124,6 +156,45 @@ const NewAnalysis = () => {
             </div>
           </CardContent>
         </Card>
+
+        {recentAnalysis.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Analysis Results</CardTitle>
+              <CardDescription>
+                Analysis results for the most recently uploaded video
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student ID</TableHead>
+                    <TableHead>Image</TableHead>
+                    <TableHead>Attention Percentage</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentAnalysis.map((student) => (
+                    <TableRow key={student.st_id}>
+                      <TableCell>{student.st_id}</TableCell>
+                      <TableCell>
+                        {student.image && (
+                          <img 
+                            src={student.image} 
+                            alt={`Student ${student.st_id}`} 
+                            className="w-16 h-16 object-cover rounded"
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell>{student.attention_percentage}%</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
