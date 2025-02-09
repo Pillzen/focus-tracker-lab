@@ -26,26 +26,14 @@ const NewAnalysis = () => {
   // Fetch the most recent analysis whenever a new video is uploaded
   const fetchRecentAnalysis = async () => {
     try {
-      // First get the most recent video_analysis entry
-      const { data: videoData, error: videoError } = await supabase
-        .from('video_analysis')
-        .select('*')
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select('st_id, image, attention_percentage, created_at')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
-      if (videoError) throw videoError;
-
-      if (videoData) {
-        // Then get all students associated with this video
-        const { data: studentsData, error: studentsError } = await supabase
-          .from('students')
-          .select('st_id, image, attention_percentage')
-          .order('created_at', { ascending: false });
-
-        if (studentsError) throw studentsError;
-        setRecentAnalysis(studentsData || []);
-      }
+      if (studentsError) throw studentsError;
+      setRecentAnalysis(studentsData || []);
     } catch (error: any) {
       console.error('Error fetching recent analysis:', error);
     }
