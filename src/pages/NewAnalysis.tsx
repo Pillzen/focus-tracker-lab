@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import Navbar from "@/components/Navbar";
@@ -13,7 +13,7 @@ const NewAnalysis = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useState(() => {
+  useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
