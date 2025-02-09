@@ -1,13 +1,29 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [uploading, setUploading] = useState(false);
   const [students, setStudents] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -86,14 +102,23 @@ const Index = () => {
     }
   };
 
-  // Use useEffect instead of useState for initial fetch
   useEffect(() => {
     fetchResults();
   }, []); // Empty dependency array means this runs once when component mounts
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">Classroom Attention Analysis</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Classroom Attention Analysis</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">
+            {user?.email}
+          </span>
+          <Button variant="outline" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
+      </div>
 
       {/* Upload Section */}
       <Card className="mb-8">
