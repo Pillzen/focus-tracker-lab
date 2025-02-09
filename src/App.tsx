@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import NewAnalysis from "./pages/NewAnalysis";
+import PastAnalysis from "./pages/PastAnalysis";
 
 const queryClient = new QueryClient();
 
@@ -17,13 +19,11 @@ const App = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -47,6 +47,14 @@ const App = () => {
             <Route
               path="/"
               element={session ? <Index /> : <Navigate to="/auth" />}
+            />
+            <Route
+              path="/new-analysis"
+              element={session ? <NewAnalysis /> : <Navigate to="/auth" />}
+            />
+            <Route
+              path="/past-analysis"
+              element={session ? <PastAnalysis /> : <Navigate to="/auth" />}
             />
             <Route
               path="/auth"

@@ -1,10 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/integrations/supabase/client";
 
-const Index = () => {
+const PastAnalysis = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
 
@@ -37,9 +37,9 @@ const Index = () => {
       <div className="container mx-auto py-8 px-4">
         <Card>
           <CardHeader>
-            <CardTitle>Welcome to Classroom Attention Analysis</CardTitle>
+            <CardTitle>Past Analysis Results</CardTitle>
             <CardDescription>
-              Monitor and analyze student attention levels in real-time
+              View previous attention analysis results for each student
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -74,4 +74,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default PastAnalysis;
