@@ -53,27 +53,21 @@ export type Database = {
       }
       video_analysis: {
         Row: {
-          average_attention_percentage: number | null
           created_at: string
           id: string
           status: string | null
-          total_students: number | null
           video_url: string
         }
         Insert: {
-          average_attention_percentage?: number | null
           created_at?: string
           id?: string
           status?: string | null
-          total_students?: number | null
           video_url: string
         }
         Update: {
-          average_attention_percentage?: number | null
           created_at?: string
           id?: string
           status?: string | null
-          total_students?: number | null
           video_url?: string
         }
         Relationships: []
