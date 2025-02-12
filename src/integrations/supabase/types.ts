@@ -36,30 +36,6 @@ export type Database = {
           created_at: string
           image: string | null
           st_id: string
-          user_id: string
-        }
-        Insert: {
-          attention_percentage?: number | null
-          created_at?: string
-          image?: string | null
-          st_id: string
-          user_id: string
-        }
-        Update: {
-          attention_percentage?: number | null
-          created_at?: string
-          image?: string | null
-          st_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      students_duplicate: {
-        Row: {
-          attention_percentage: number | null
-          created_at: string
-          image: string | null
-          st_id: string
         }
         Insert: {
           attention_percentage?: number | null
@@ -82,7 +58,6 @@ export type Database = {
           id: string
           status: string | null
           total_students: number | null
-          user_id: string
           video_url: string
         }
         Insert: {
@@ -91,7 +66,6 @@ export type Database = {
           id?: string
           status?: string | null
           total_students?: number | null
-          user_id: string
           video_url: string
         }
         Update: {
@@ -100,7 +74,6 @@ export type Database = {
           id?: string
           status?: string | null
           total_students?: number | null
-          user_id?: string
           video_url?: string
         }
         Relationships: []
