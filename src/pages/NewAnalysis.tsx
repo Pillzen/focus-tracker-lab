@@ -5,13 +5,18 @@ import { useToast } from "@/components/ui/use-toast";
 import Navbar from "@/components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload } from "lucide-react";
+import { Upload, AlertCircle } from "lucide-react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 const NewAnalysis = () => {
   const [uploading, setUploading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [recentAnalysis, setRecentAnalysis] = useState<any[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -23,7 +28,6 @@ const NewAnalysis = () => {
     getUser();
   }, []);
 
-  // Fetch the most recent analysis whenever a new video is uploaded
   const fetchRecentAnalysis = async () => {
     try {
       const { data: studentsData, error: studentsError } = await supabase
@@ -43,10 +47,21 @@ const NewAnalysis = () => {
     e.preventDefault();
     try {
       setUploading(true);
+      setUploadProgress(0);
       const file = e.dataTransfer.files[0];
       if (!file) return;
 
-      // First, get the current video if any exists
+      // Simulated progress updates
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 95) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 5;
+        });
+      }, 100);
+
       const { data: existingVideos } = await supabase
         .from('video_analysis')
         .select('video_url')
@@ -86,12 +101,14 @@ const NewAnalysis = () => {
 
       if (dbError) throw dbError;
 
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
       toast({
         title: "Success",
         description: "Video uploaded successfully!",
       });
 
-      // Fetch the latest analysis after successful upload
       await fetchRecentAnalysis();
     } catch (error: any) {
       console.error('Error uploading video:', error.message);
@@ -110,28 +127,29 @@ const NewAnalysis = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-background">
       <Navbar email={user?.email || ""} />
       <div className="container mx-auto py-8 px-4 space-y-8">
         <Card>
-          <CardHeader>
-            <CardTitle>Upload Video for Analysis</CardTitle>
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Upload Video for Analysis</CardTitle>
             <CardDescription>
               Drag and drop your video file here to analyze student attention levels
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="border-2 border-dashed rounded-lg p-12 text-center hover:border-primary cursor-pointer"
+              className="border-2 border-dashed rounded-lg p-12 text-center hover:border-primary cursor-pointer transition-all duration-200 hover:bg-accent"
             >
               {uploading ? (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <div className="animate-spin">
                     <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
                   </div>
                   <p className="text-muted-foreground">Uploading...</p>
+                  <Progress value={uploadProgress} className="w-[60%] mx-auto" />
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -142,44 +160,60 @@ const NewAnalysis = () => {
                 </div>
               )}
             </div>
+            
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Only video files are supported. Maximum file size: 100MB
+              </AlertDescription>
+            </Alert>
           </CardContent>
         </Card>
 
         {recentAnalysis.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Recent Analysis Results</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                Recent Analysis Results
+                <Badge variant="secondary">Latest</Badge>
+              </CardTitle>
               <CardDescription>
                 Analysis results for the most recently uploaded video
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student ID</TableHead>
-                    <TableHead>Image</TableHead>
-                    <TableHead>Attention Percentage</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentAnalysis.map((student) => (
-                    <TableRow key={student.st_id}>
-                      <TableCell>{student.st_id}</TableCell>
-                      <TableCell>
-                        {student.image && (
-                          <img 
-                            src={student.image} 
-                            alt={`Student ${student.st_id}`} 
-                            className="w-16 h-16 object-cover rounded"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>{student.attention_percentage}%</TableCell>
+              <ScrollArea className="h-[400px] rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Student ID</TableHead>
+                      <TableHead>Image</TableHead>
+                      <TableHead>Attention Percentage</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {recentAnalysis.map((student) => (
+                      <TableRow key={student.st_id}>
+                        <TableCell>{student.st_id}</TableCell>
+                        <TableCell>
+                          {student.image && (
+                            <img 
+                              src={student.image} 
+                              alt={`Student ${student.st_id}`} 
+                              className="w-16 h-16 object-cover rounded-md"
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={student.attention_percentage > 70 ? "success" : "destructive"}>
+                            {student.attention_percentage}%
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
             </CardContent>
           </Card>
         )}
