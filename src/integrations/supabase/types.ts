@@ -56,18 +56,21 @@ export type Database = {
           created_at: string
           id: string
           status: string | null
+          user_id: string | null
           video_url: string
         }
         Insert: {
           created_at?: string
           id?: string
           status?: string | null
+          user_id?: string | null
           video_url: string
         }
         Update: {
           created_at?: string
           id?: string
           status?: string | null
+          user_id?: string | null
           video_url?: string
         }
         Relationships: []

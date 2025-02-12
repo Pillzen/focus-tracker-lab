@@ -62,9 +62,15 @@ const NewAnalysis = () => {
         });
       }, 100);
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       const { data: existingVideos } = await supabase
         .from('video_analysis')
         .select('video_url')
+        .eq('user_id', user.id)
         .limit(1);
 
       if (existingVideos && existingVideos.length > 0) {
@@ -79,7 +85,7 @@ const NewAnalysis = () => {
           await supabase
             .from('video_analysis')
             .delete()
-            .match({ video_url: oldVideoUrl });
+            .match({ video_url: oldVideoUrl, user_id: user.id });
         }
       }
 
@@ -97,7 +103,10 @@ const NewAnalysis = () => {
 
       const { error: dbError } = await supabase
         .from('video_analysis')
-        .insert([{ video_url: publicURL.publicUrl }]);
+        .insert([{ 
+          video_url: publicURL.publicUrl,
+          user_id: user.id 
+        }]);
 
       if (dbError) throw dbError;
 
@@ -205,7 +214,7 @@ const NewAnalysis = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={student.attention_percentage > 70 ? "success" : "destructive"}>
+                          <Badge variant={student.attention_percentage > 70 ? "secondary" : "destructive"}>
                             {student.attention_percentage}%
                           </Badge>
                         </TableCell>
