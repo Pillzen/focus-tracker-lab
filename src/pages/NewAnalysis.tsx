@@ -214,7 +214,7 @@ const NewAnalysis = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={student.attention_percentage > 70 ? "secondary" : "destructive"}>
+                          <Badge variant={student.attention_percentage > 70 ? "default" : "destructive"}>
                             {student.attention_percentage}%
                           </Badge>
                         </TableCell>
