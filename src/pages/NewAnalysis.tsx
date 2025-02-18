@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -34,9 +35,13 @@ const NewAnalysis = () => {
 
   const fetchRecentAnalysis = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select('st_id, image, attention_percentage, created_at')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1);
 
@@ -71,9 +76,15 @@ const NewAnalysis = () => {
         });
       }, 100);
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       const { data: existingVideos } = await supabase
         .from('video_analysis')
         .select('video_url')
+        .eq('user_id', user.id)
         .limit(1);
 
       if (existingVideos && existingVideos.length > 0) {
@@ -88,7 +99,7 @@ const NewAnalysis = () => {
           await supabase
             .from('video_analysis')
             .delete()
-            .match({ video_url: oldVideoUrl });
+            .match({ video_url: oldVideoUrl, user_id: user.id });
         }
       }
 
@@ -108,7 +119,7 @@ const NewAnalysis = () => {
         .from('video_analysis')
         .insert([{ 
           video_url: publicURL.publicUrl,
-          user_id: user.id // Add user_id to the insert
+          user_id: user.id 
         }]);
 
       if (dbError) throw dbError;
@@ -132,7 +143,7 @@ const NewAnalysis = () => {
     } finally {
       setUploading(false);
     }
-  }, [navigate, toast, user]);
+  }, [navigate, toast]);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();

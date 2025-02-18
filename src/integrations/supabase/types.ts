@@ -36,18 +36,21 @@ export type Database = {
           created_at: string
           image: string | null
           st_id: string
+          user_id: string | null
         }
         Insert: {
           attention_percentage?: number | null
           created_at?: string
           image?: string | null
           st_id: string
+          user_id?: string | null
         }
         Update: {
           attention_percentage?: number | null
           created_at?: string
           image?: string | null
           st_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
