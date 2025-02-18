@@ -12,10 +12,19 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 
+// Define interfaces for type safety
+interface Student {
+  st_id: string;
+  image: string | null;
+  attention_percentage: number | null;
+  created_at: string;
+  user_id: string | null;
+}
+
 const NewAnalysis = () => {
   const [uploading, setUploading] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [recentAnalysis, setRecentAnalysis] = useState<any[]>([]);
+  const [recentAnalysis, setRecentAnalysis] = useState<Student[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -38,15 +47,18 @@ const NewAnalysis = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: studentsData, error: studentsError } = await supabase
+      const { data, error } = await supabase
         .from('students')
-        .select('st_id, image, attention_percentage, created_at')
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (studentsError) throw studentsError;
-      setRecentAnalysis(studentsData || []);
+      if (error) {
+        throw error;
+      }
+
+      setRecentAnalysis(data || []);
     } catch (error: any) {
       console.error('Error fetching recent analysis:', error);
       toast({
@@ -228,7 +240,7 @@ const NewAnalysis = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={student.attention_percentage > 70 ? "default" : "destructive"}>
+                          <Badge variant={student.attention_percentage && student.attention_percentage > 70 ? "default" : "destructive"}>
                             {student.attention_percentage}%
                           </Badge>
                         </TableCell>
