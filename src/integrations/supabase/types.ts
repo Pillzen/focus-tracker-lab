@@ -36,21 +36,18 @@ export type Database = {
           created_at: string
           image: string | null
           st_id: string
-          user_id: string
         }
         Insert: {
           attention_percentage?: number | null
           created_at?: string
           image?: string | null
           st_id: string
-          user_id: string
         }
         Update: {
           attention_percentage?: number | null
           created_at?: string
           image?: string | null
           st_id?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -77,30 +74,48 @@ export type Database = {
       }
       video_analysis: {
         Row: {
-          average_attention_percentage: number | null
           created_at: string
           id: string
           status: string | null
-          total_students: number | null
-          user_id: string
+          user_id: string | null
           video_url: string
         }
         Insert: {
-          average_attention_percentage?: number | null
           created_at?: string
           id?: string
           status?: string | null
-          total_students?: number | null
-          user_id: string
+          user_id?: string | null
           video_url: string
         }
         Update: {
-          average_attention_percentage?: number | null
           created_at?: string
           id?: string
           status?: string | null
-          total_students?: number | null
-          user_id?: string
+          user_id?: string | null
+          video_url?: string
+        }
+        Relationships: []
+      }
+      video_analysis_duplicate: {
+        Row: {
+          created_at: string
+          id: string
+          status: string | null
+          user_id: string | null
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string | null
+          user_id?: string | null
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string | null
+          user_id?: string | null
           video_url?: string
         }
         Relationships: []
