@@ -3,31 +3,53 @@ import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+
+interface Student {
+  st_id: string;
+  image: string | null;
+  attention_percentage: number | null;
+  created_at: string;
+  user_id: string | null;
+}
 
 const PastAnalysis = () => {
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
       setUser(user);
+      fetchResults(user.id);
     };
     getUser();
-    fetchResults();
-  }, []);
+  }, [navigate]);
 
-  const fetchResults = async () => {
+  const fetchResults = async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from('students')
         .select('*')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setStudents(data || []);
     } catch (error: any) {
       console.error('Error fetching results:', error.message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch analysis results",
+      });
     }
   };
 
@@ -39,7 +61,7 @@ const PastAnalysis = () => {
           <CardHeader>
             <CardTitle>Past Analysis Results</CardTitle>
             <CardDescription>
-              View previous attention analysis results for each student
+              View your previous attention analysis results for each student
             </CardDescription>
           </CardHeader>
           <CardContent>
