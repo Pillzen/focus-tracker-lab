@@ -36,6 +36,30 @@ export type Database = {
           created_at: string
           image: string | null
           st_id: string
+          user_id: string
+        }
+        Insert: {
+          attention_percentage?: number | null
+          created_at?: string
+          image?: string | null
+          st_id: string
+          user_id: string
+        }
+        Update: {
+          attention_percentage?: number | null
+          created_at?: string
+          image?: string | null
+          st_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      students_duplicate: {
+        Row: {
+          attention_percentage: number | null
+          created_at: string
+          image: string | null
+          st_id: string
         }
         Insert: {
           attention_percentage?: number | null
@@ -53,24 +77,30 @@ export type Database = {
       }
       video_analysis: {
         Row: {
+          average_attention_percentage: number | null
           created_at: string
           id: string
           status: string | null
-          user_id: string | null
+          total_students: number | null
+          user_id: string
           video_url: string
         }
         Insert: {
+          average_attention_percentage?: number | null
           created_at?: string
           id?: string
           status?: string | null
-          user_id?: string | null
+          total_students?: number | null
+          user_id: string
           video_url: string
         }
         Update: {
+          average_attention_percentage?: number | null
           created_at?: string
           id?: string
           status?: string | null
-          user_id?: string | null
+          total_students?: number | null
+          user_id?: string
           video_url?: string
         }
         Relationships: []

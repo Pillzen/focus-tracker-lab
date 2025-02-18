@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,10 +22,15 @@ const NewAnalysis = () => {
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
       setUser(user);
+      fetchRecentAnalysis();
     };
     getUser();
-  }, []);
+  }, [navigate]);
 
   const fetchRecentAnalysis = async () => {
     try {
@@ -40,6 +44,11 @@ const NewAnalysis = () => {
       setRecentAnalysis(studentsData || []);
     } catch (error: any) {
       console.error('Error fetching recent analysis:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch recent analysis",
+      });
     }
   };
 
@@ -62,15 +71,9 @@ const NewAnalysis = () => {
         });
       }, 100);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
-
       const { data: existingVideos } = await supabase
         .from('video_analysis')
         .select('video_url')
-        .eq('user_id', user.id)
         .limit(1);
 
       if (existingVideos && existingVideos.length > 0) {
@@ -85,7 +88,7 @@ const NewAnalysis = () => {
           await supabase
             .from('video_analysis')
             .delete()
-            .match({ video_url: oldVideoUrl, user_id: user.id });
+            .match({ video_url: oldVideoUrl });
         }
       }
 
@@ -105,7 +108,7 @@ const NewAnalysis = () => {
         .from('video_analysis')
         .insert([{ 
           video_url: publicURL.publicUrl,
-          user_id: user.id 
+          user_id: user.id // Add user_id to the insert
         }]);
 
       if (dbError) throw dbError;
@@ -129,7 +132,7 @@ const NewAnalysis = () => {
     } finally {
       setUploading(false);
     }
-  }, [navigate, toast]);
+  }, [navigate, toast, user]);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
