@@ -131,7 +131,8 @@ const NewAnalysis = () => {
         .from('video_analysis')
         .insert([{ 
           video_url: publicURL.publicUrl,
-          user_id: user.id 
+          user_id: user.id,
+          video_title: file.name // Add the original file name as video_title
         }]);
 
       if (dbError) throw dbError;
