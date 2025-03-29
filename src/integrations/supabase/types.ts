@@ -16,6 +16,7 @@ export type Database = {
           full_name: string | null
           id: string
           institution: string | null
+          profile_picture: string | null
           subjects: string[] | null
           updated_at: string
           username: string
@@ -26,6 +27,7 @@ export type Database = {
           full_name?: string | null
           id: string
           institution?: string | null
+          profile_picture?: string | null
           subjects?: string[] | null
           updated_at?: string
           username: string
@@ -36,6 +38,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           institution?: string | null
+          profile_picture?: string | null
           subjects?: string[] | null
           updated_at?: string
           username?: string

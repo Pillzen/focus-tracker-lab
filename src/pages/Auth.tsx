@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const signUpSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -18,6 +18,7 @@ const signUpSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   fullName: z.string().optional(),
   institution: z.string().optional(),
+  profilePicture: z.instanceof(File).optional(),
 });
 
 const signInSchema = z.object({
@@ -28,6 +29,7 @@ const signInSchema = z.object({
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -39,6 +41,7 @@ const Auth = () => {
       username: "",
       fullName: "",
       institution: "",
+      profilePicture: undefined,
     },
     mode: "onSubmit",
   });
@@ -46,7 +49,20 @@ const Auth = () => {
   // Reset validation when switching between sign in and sign up
   const toggleSignUp = () => {
     form.reset();
+    setPreviewImage(null);
     setIsSignUp(!isSignUp);
+  };
+
+  const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      form.setValue('profilePicture', file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleEmailAuth = async (values: {
@@ -55,12 +71,13 @@ const Auth = () => {
     username?: string;
     fullName?: string;
     institution?: string;
+    profilePicture?: File;
   }) => {
     setIsLoading(true);
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
           options: {
@@ -71,7 +88,35 @@ const Auth = () => {
             },
           },
         });
-        if (error) throw error;
+
+        if (authError) throw authError;
+
+        if (values.profilePicture) {
+          const fileExt = values.profilePicture.name.split('.').pop();
+          const fileName = `${authData.user?.id}/profile.${fileExt}`;
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, values.profilePicture);
+
+          if (uploadError) {
+            console.error('Profile picture upload error:', uploadError);
+            toast({
+              variant: "destructive",
+              title: "Profile Picture Upload Failed",
+              description: uploadError.message,
+            });
+          } else {
+            const { data: { publicUrl } } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(fileName);
+
+            await supabase
+              .from('profiles')
+              .update({ profile_picture: publicUrl })
+              .eq('id', authData.user?.id);
+          }
+        }
+
         toast({
           title: "Account created",
           description: "Please check your email to verify your account.",
@@ -95,21 +140,6 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    }
-  };
-
   return (
     <div className="container mx-auto py-8 px-4 max-w-md">
       <Card>
@@ -122,6 +152,33 @@ const Auth = () => {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleEmailAuth)} className="space-y-4">
+              {isSignUp && (
+                <FormItem className="flex flex-col items-center space-y-2">
+                  <FormLabel>Profile Picture (Optional)</FormLabel>
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    id="profilePicture"
+                    onChange={handleProfilePictureChange}
+                  />
+                  <Label 
+                    htmlFor="profilePicture" 
+                    className="cursor-pointer"
+                  >
+                    <Avatar className="w-24 h-24">
+                      <AvatarImage 
+                        src={previewImage || undefined} 
+                        alt="Profile Picture Preview" 
+                      />
+                      <AvatarFallback>
+                        {previewImage ? "Change" : "Upload"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Label>
+                </FormItem>
+              )}
+
               <FormField
                 control={form.control}
                 name="email"
