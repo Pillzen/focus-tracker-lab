@@ -46,7 +46,6 @@ const Auth = () => {
     mode: "onSubmit",
   });
 
-  // Reset validation when switching between sign in and sign up
   const toggleSignUp = () => {
     form.reset();
     setPreviewImage(null);
@@ -137,6 +136,31 @@ const Auth = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth',
+        },
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Google Sign In Error",
+          description: error.message,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: error.message,
+      });
     }
   };
 
