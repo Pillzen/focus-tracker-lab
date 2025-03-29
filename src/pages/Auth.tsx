@@ -1,46 +1,85 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const signUpSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  fullName: z.string().optional(),
+  institution: z.string().optional(),
+});
+
+const signInSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(1, "Please enter your password"),
+});
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const form = useForm({
+    resolver: zodResolver(isSignUp ? signUpSchema : signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      username: "",
+      fullName: "",
+      institution: "",
+    },
+    mode: "onSubmit",
+  });
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Reset validation when switching between sign in and sign up
+  const toggleSignUp = () => {
+    form.reset();
+    setIsSignUp(!isSignUp);
+  };
+
+  const handleEmailAuth = async (values: {
+    email: string;
+    password: string;
+    username?: string;
+    fullName?: string;
+    institution?: string;
+  }) => {
     setIsLoading(true);
 
     try {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: values.email,
+          password: values.password,
           options: {
             data: {
-              username,
+              username: values.username,
+              full_name: values.fullName,
+              institution: values.institution,
             },
           },
         });
         if (error) throw error;
         toast({
-          title: "Success!",
+          title: "Account created",
           description: "Please check your email to verify your account.",
         });
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: values.email,
+          password: values.password,
         });
         if (error) throw error;
         navigate("/");
@@ -76,44 +115,92 @@ const Auth = () => {
       <Card>
         <CardHeader>
           <CardTitle>{isSignUp ? "Create Account" : "Sign In"}</CardTitle>
+          <CardDescription>
+            {isSignUp ? "Create a new account to get started" : "Sign in to your account"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleEmailAuth} className="space-y-4">
-            {isSignUp && (
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleEmailAuth)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="your.email@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
-            </Button>
-          </form>
+
+              {isSignUp && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="yourusername" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John Doe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="institution"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Institution (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your School or Organization" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
+              </Button>
+            </form>
+          </Form>
 
           <div className="mt-4">
             <Button
@@ -129,7 +216,7 @@ const Auth = () => {
           <p className="text-center mt-4">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={toggleSignUp}
               className="text-blue-500 hover:underline"
               type="button"
             >
