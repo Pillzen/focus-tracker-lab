@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -94,7 +95,7 @@ const Auth = () => {
           const fileExt = values.profilePicture.name.split('.').pop();
           const fileName = `${authData.user?.id}/profile.${fileExt}`;
           const { error: uploadError } = await supabase.storage
-            .from('avatars')
+            .from('profile-pictures')
             .upload(fileName, values.profilePicture);
 
           if (uploadError) {
@@ -104,15 +105,6 @@ const Auth = () => {
               title: "Profile Picture Upload Failed",
               description: uploadError.message,
             });
-          } else {
-            const { data: { publicUrl } } = supabase.storage
-              .from('avatars')
-              .getPublicUrl(fileName);
-
-            await supabase
-              .from('profiles')
-              .update({ profile_picture: publicUrl })
-              .eq('id', authData.user?.id);
           }
         }
 
